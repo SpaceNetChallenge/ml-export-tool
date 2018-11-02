@@ -14,73 +14,12 @@ A user would like to perform machine learning against an area.  They provide an 
 
 ## Export End Points
 
-
-
-
-
-
-
 1. TMS
 2. Vector Tiles
-3. GeoJson/Shapefile
-4. OSM pbf
-5. Local Model Package
+3. GeoJson
+4. Cloud Optimized GeoTiff
 
 
-
-## Key pieces of information for model to report
-1. Estimated Time for Production {x seconds/tile}
-2. Accuracy {Precision/Recall, Mean Error)
-3. Resolution Required {zoomTile, GSD}
-4. Output Resolution {zoomTile, GSD}
-5. Features {'Building Count', 'Building Area', 'Building Bounding Box', 'Building Instance Segmentation'}
-6. Region Trained: {STAC_Item}
-7. Test Data:
-8. src docker container
-
-
-
-## Type of Requests (Tasking Manager to Service):
-
-### Get Requests:
-    * endpoint/getmodels
-        * report registered models
-
-
-    * endpoint/getmodelcapability/{modelname}
-        * report key pieces above
-        
-    * endpoint/estimate/{modelname, geobox, datasource}
-        * report estimated time of completion (Days/Hours/Minutes)
-        * report estimated cost
-        
-    * endpoint/status/{processid}
-        * report process status
-        * report estimated completion
-        
-    * endpoint/orderexport/orderid/tms/{x}/{y}/{z}.png
-    * endpoint/orderexport/orderid/vectortile/{x}/{y}/{z}.pbf
-        
-### Post Requests:
-
-    * endpoint/orderexport/{modelversion, geobox, datasource}
-        * return orderId for status
-        
-
-## Type of Request (Service to ML Model)
-        
-### Get Requests:
-
-    * endpoint/{modelid}/{x}/{y}/{z}.pbf
-        * return vector tile for specified model request
-        
-    * endpoint/{modelid}/{x}/{y}/{z}.png
-        * return raster tile for specified model request
-    
-        
-### Post Requests:
-     * endpoint/{modeljson}}
-        * register new model
 
 
 ## Test items:
@@ -182,4 +121,58 @@ tile, mask = main.tile(address,
      
     
 
+
+## Key pieces of information for model to report
+1. Estimated Time for Production {x seconds/tile}
+2. Accuracy {Precision/Recall, Mean Error)
+3. Resolution Required {zoomTile, GSD}
+4. Output Resolution {zoomTile, GSD}
+5. Features {'Building Count', 'Building Area', 'Building Bounding Box', 'Building Instance Segmentation'}
+6. Region Trained: {STAC_Item}
+7. Test Data:
+8. src docker container
+
+
+
+## Type of Requests (Tasking Manager to Service):
+
+### Get Requests:
+    * endpoint/getmodels
+        * report registered models
+
+
+    * endpoint/getmodelcapability/{modelname}
+        * report key pieces above
+        
+    * endpoint/estimate/{modelname, geobox, datasource}
+        * report estimated time of completion (Days/Hours/Minutes)
+        * report estimated cost
+        
+    * endpoint/status/{processid}
+        * report process status
+        * report estimated completion
+        
+    * endpoint/orderexport/orderid/tms/{x}/{y}/{z}.png
+    * endpoint/orderexport/orderid/vectortile/{x}/{y}/{z}.pbf
+        
+### Post Requests:
+
+    * endpoint/orderexport/{modelversion, geobox, datasource}
+        * return orderId for status
+        
+
+## Type of Request (Service to ML Model)
+        
+### Get Requests:
+
+    * endpoint/{modelid}/{x}/{y}/{z}.pbf
+        * return vector tile for specified model request
+        
+    * endpoint/{modelid}/{x}/{y}/{z}.png
+        * return raster tile for specified model request
+    
+        
+### Post Requests:
+     * endpoint/{modeljson}}
+        * register new model
 
