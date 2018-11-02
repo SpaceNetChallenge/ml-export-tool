@@ -28,6 +28,10 @@ Test Location 1:
 SpaceNet Area of Interest Las Vegas
 
 ##
+
+## Demo Map:
+
+https://cwnets-demo.netlify.com/#/url/s3%3A%2F%2Fspacenet-dataset%2FAOI_2_Vegas%2FsrcData%2FrasterData%2FAOI_2_Vegas_MUL-PanSharpen_Cloud.tif/center/-115.24685,36.19648/zoom/17
 ### srcImagery  
     * s3://spacenet-dataset/AOI_2_Vegas/srcData/rasterData/AOI_2_Vegas_MUL-PanSharpen_Cloud.tif
     * s3://spacenet-dataset/AOI_2_Vegas/srcData/rasterData/AOI_2_Vegas_PAN_Cloud.tif
