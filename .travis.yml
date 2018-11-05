@@ -25,6 +25,7 @@ install:
   - conda info -a
   - pip install -e .[test]
   - conda info -a
+  - conda list
 # command to run tests
 script:
   - conda info -a
