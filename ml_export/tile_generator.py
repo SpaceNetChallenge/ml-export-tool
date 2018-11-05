@@ -75,8 +75,7 @@ def create_super_tile_list(tile_object, zoom_level=2):
 
         tile_object_list = child_tile_list
         tile_position_list = child_tile_position
-        print(child_tile_position)
-
+        
     return tile_object_list, tile_position_list
 
 
