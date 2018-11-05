@@ -55,6 +55,8 @@ import mercantile
 
 address = "s3://spacenet-dataset/AOI_2_Vegas/resultData/AOI_2_Vegas_MULPS_v13_cloud.tiff"
 
+
+# -115.24, 36.1, -115.2, 36.2, 17)
 tile_coords = mercantile.tile(-115.24, 36.1986, 18)
 
 tile, mask = main.tile(address,
