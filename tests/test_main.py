@@ -37,7 +37,7 @@ def test_super_res():
 
 
 
-    np.testing.assert_allclose(super_res_tile, super_tile_test)
+    np.testing.assert_allclose(super_res_tile.astype(int), super_tile_test.astype(int))
 
 
 
