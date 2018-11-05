@@ -34,7 +34,7 @@ def test_super_res():
 
 
 
-    np.testing.assert_array_equal(super_res_tile, mask_address_np)
+    np.testing.assert_allclose(super_res_tile, mask_address_np)
 
 
 
