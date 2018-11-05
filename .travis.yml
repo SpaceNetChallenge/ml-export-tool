@@ -22,6 +22,7 @@ install:
   - conda create --yes -n ml-export python=$TRAVIS_PYTHON_VERSION pip
   - source activate ml-export
   - pip install -U pip
+  - pip --version
   - conda install -c conda-forge rtree
   - pip install -q -e .[test]
 # command to run tests
