@@ -16,7 +16,7 @@ with open('README.MD') as f:
     readme = f.read()
 
 # Runtime requirements.
-inst_reqs = ["rio-tiler", "shapely", "mercantile", "numpy"]
+inst_reqs = ["rio-tiler==1.0rc2", "shapely", "mercantile", "numpy"]
 
 extra_reqs = {
     'test': ['mock', 'pytest', 'pytest-cov', 'codecov']}
