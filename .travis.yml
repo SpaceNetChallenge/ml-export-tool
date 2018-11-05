@@ -28,5 +28,6 @@ install:
   - conda list
 # command to run tests
 script:
-  - conda info -a
-  - source activate ml-export & pytest #--log-level=INFO #--cov=./# or py.test for Python versions 3.5 and below
+  - source activate ml-export & pytest --cov=./ #--log-level=INFO #--cov=./# or py.test for Python versions 3.5 and below
+
+
