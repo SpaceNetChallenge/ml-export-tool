@@ -19,10 +19,8 @@ install:
   - conda update -q conda
   # Useful for debugging any issues with conda
   - conda info -a
-  - conda create --yes -n ml-export python=$TRAVIS_PYTHON_VERSION pip
+  - conda create --yes -n ml-export python=$TRAVIS_PYTHON_VERSION pip=18.1
   - source activate ml-export
-  - pip install -U pip
-  - pip --version
   - conda install -c conda-forge rtree
   - pip install -q -e .[test]
 # command to run tests
