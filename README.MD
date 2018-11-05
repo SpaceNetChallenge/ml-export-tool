@@ -1,4 +1,5 @@
 # Creating an ML-Export Tool 
+[![Build Status](https://travis-ci.com/SpaceNetChallenge/ml-export-tool.svg?branch=dev)](https://travis-ci.com/SpaceNetChallenge/ml-export-tool)
 
 ## User Story
 

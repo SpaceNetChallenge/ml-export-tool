@@ -26,4 +26,5 @@ install:
   - pip install -q -e .[test]
 # command to run tests
 script:
-  - pytest # or py.test for Python versions 3.5 and below
+  - pytest --log-level=INFO --cov=./# or py.test for Python versions 3.5 and below
+  - codecov
