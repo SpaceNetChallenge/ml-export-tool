@@ -1,19 +1,20 @@
 from shapely import geometry
 import mercantile
 from rio_tiler import main
+import numpy as np
+import logging
+
+logging.basicConfig(format='%(levelname)s:%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
 
 
-
-def getTileList(geom,
-                zoom=17):
+def get_tile_list(geom,
+                  zoom=17):
     """Generate the Tile List for The Tasking List
 
     Parameters
     ----------
     geom: shapely geometry of area.
 
-    west, south, east, north : sequence of float
-        Bounding values in decimal degrees.
     zoom : int Zoom Level for Tiles
         One or more zoom levels.
 
@@ -29,44 +30,41 @@ def getTileList(geom,
 
     for tile in tiles:
 
-        tileGeom = geometry.shape(mercantile.feature(tile)['geometry'])
+        tile_geom = geometry.shape(mercantile.feature(tile)['geometry'])
 
-        if tileGeom.intersects(geom):
+        if tile_geom.intersects(geom):
 
             tile_list.append(tile)
 
-
-        return tile_list
-
+    return tile_list
 
 
+def create_super_tile_list(tile_object, zoom_level=2):
 
-def create_super_tile_list(tile_coord, zoomLevel=2):
-    
     """Generate the Tile List for The Tasking List
 
     Parameters
     ----------
-    tile_coord: mercantile tile object
+    tile_object: mercantile tile object
 
 
-    zoom : int Zoom Level for Tiles
-        One or more zoom levels.
+    zoom_level : int Zoom Level for Tiles
+        One or more zoom levels to superres.
 
     Returns
     ------
-    tile_list: list of tile objects to gather
+    tile_object_list: list of tile objects to gather
     tile_position_list: list of relative tile position
     """
 
-    rel_tile_pos = np.asarray([(0,0), (0,1), (1,1), (1,0)])
+    rel_tile_pos = np.asarray([(0, 0), (0, 1), (1, 1), (1, 0)])
     
-    tile_list = [tile_coords]
-    tile_position_list = [(0,0)]
-    for zoom in range(zoomLevel):
+    tile_object_list = [tile_object]
+    tile_position_list = [(0, 0)]
+    for zoom in range(zoom_level):
         child_tile_list = []
         child_tile_position = []
-        for tile, tile_pos in zip(tile_list, tile_position_list):
+        for tile, tile_pos in zip(tile_object_list, tile_position_list):
             
             tile_pos_np = np.asarray(tile_pos)
             print(tile_pos_np)
@@ -75,51 +73,61 @@ def create_super_tile_list(tile_coord, zoomLevel=2):
             child_tile_list.extend(mercantile.children(tile))
             child_tile_position.extend(tile_pos_np*2+rel_tile_pos)
 
-        tile_list = child_tile_list
+        tile_object_list = child_tile_list
         tile_position_list = child_tile_position
         print(child_tile_position)
 
+    return tile_object_list, tile_position_list
 
-    return tile_list, tile_position_list
 
+def create_super_tile_image(tile_object, address, zoom_level=2, indexes=None, tile_size=256):
 
-def create_super_tile_image(tile_coord, zoomLevel=2,indexes=[1,2,3], tile_size=256):
-    
     """Generate the Tile List for The Tasking List
 
     Parameters
     ----------
-    tile_coord: mercantile tile object
-
-
-    zoom : int Zoom Level for Tiles
+    tile_object: mercantile tile object
+    address: COG location
+    zoom_level : int Zoom Level for Tiles
         One or more zoom levels.
+    indexes: List of indexes for address.  This is incase it is more than 3-bands
+    tile_size: int tile_size for query.  Standard is 256, 256
+
+
 
     Returns
     ------
-    superResTile: returns numpy array of size (len(indexes,(2**zoomLevel)*tile_size,(2**zoomLevel)*tile_size)
+    super_restile: returns numpy array of size (len(indexes,(2**zoom_level)*tile_size,(2**zoom_level)*tile_size)
     """
+
+    if indexes is None:
+        indexes = [1, 2, 3]
     
-    tile_list, tile_position_list = create_super_tile_list(tile_coord, zoomLevel=2)
+    tile_object_list, tile_position_list = create_super_tile_list(tile_object, zoom_level=2)
     
-    superRestile = np.zeros((len(indexes,(2**zoomLevel)*tile_size,(2**zoomLevel)*tile_size),dtype=float)
+    super_restile = np.zeros(
+        (len(indexes), (2 ** zoom_level) * tile_size, (2 ** zoom_level) * tile_size),
+        dtype=float
+    )
 
-    for tile_coords, (tilePlace_x, tilePlace_y) in zip(tileList, tile_position_list):
-        tilePlaceCalc = [tilePlace_x*tile_size, (tilePlace_x+1)*tile_size, tilePlace_y*tile_size, (tilePlace_y+1)*tile_size]
-        print([tilePlace_x*tile_size, (tilePlace_x+1)*tile_size, tilePlace_y*tile_size, (tilePlace_y+1)*tile_size])
+    for tile_coords, (tilePlace_x, tilePlace_y) in zip(tile_object_list, tile_position_list):
 
-        tmpTile, mask = main.tile(address,
-                               tile_coords.x,
-                               tile_coords.y,
-                               tile_coords.z
-                               )
+        tile_place_calc = [
+            tilePlace_x*tile_size,
+            (tilePlace_x+1)*tile_size,
+            tilePlace_y*tile_size,
+            (tilePlace_y+1)*tile_size
+        ]
 
-        superRestile[:,tilePlaceCalc[0]:tilePlaceCalc[1],tilePlaceCalc[2]:tilePlaceCalc[3]]=tmpTile
+        # print
+        logging.debug(tile_place_calc)
+
+        tmp_tile, mask = main.tile(address,
+                                   tile_coords.x,
+                                   tile_coords.y,
+                                   tile_coords.z
+                                   )
+
+        super_restile[:, tile_place_calc[0]:tile_place_calc[1], tile_place_calc[2]:tile_place_calc[3]] = tmp_tile
         
-    
-    return superResTile
-
-
-
-
-
+    return super_restile
