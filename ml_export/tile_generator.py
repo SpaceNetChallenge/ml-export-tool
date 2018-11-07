@@ -7,6 +7,9 @@ import logging
 logging.basicConfig(format='%(levelname)s:%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
 
 
+
+
+
 def get_tile_list(geom,
                   zoom=17):
     """Generate the Tile List for The Tasking List
