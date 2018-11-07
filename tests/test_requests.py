@@ -32,14 +32,3 @@ def test_get_tasking_id_aoi():
     aoi_geom = tm_interface.get_task_area_from_id(taskid=taskid)
 
 
-
-
-
-
-
-
-
-
-
-
-
