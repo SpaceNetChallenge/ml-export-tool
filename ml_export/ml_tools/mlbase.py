@@ -1,7 +1,10 @@
 import logging
 import numpy as np
+import json
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+
+
 
 
 
@@ -20,10 +23,18 @@ class mlmodel():
     predict_batch:  This should receive a list of np arrays of [np(3,1024,1024)] and return a list of [np(1,1024,1024]
 
 
+    model_dictionary = {'model_file': "test.hdf5",
+                "model_description": "Passthrough Model",
+                "model_version": "0.1",
+                "model_speed": 20,   # numpy arrays per second
+                                    }
+
+
+
     """
 
 
-    def __init__(self, model_dict, debug=False):
+    def __init__(self, model_json_string, debug=False):
         ''' Inititiate model '''
 
         self.logger = logging.getLogger(__name__)
@@ -47,23 +58,29 @@ class mlmodel():
 
 
         ## Assign Model Dictionary
-        self.model_dict = model_dict
+        self.model_json = model_json_string
 
         ## Load Model Into Memory
-        self.load_model_dict(model_dict)
+        self.load_model_dict()
 
 
+    def estimate_time(self, tiles_length):
+        """Returns Completion estimate in Seconds"""
 
 
-    def load_model_dict(self, model_dict):
+        return self.model_dict['model_speed']* tiles_length
 
-        pass
+
+    def load_model_dict(self):
+
+
+        self.model_dict = json.loads(self.model_json)
 
 
 
     def predict(self, np_array):
 
-        return np.zeros((1,1024,1024))
+        return np_array[None, 0, :, :]
 
 
 
@@ -72,15 +89,12 @@ class mlmodel():
         list_np_array_results = []
         for np_array in list_np_array:
 
-            list_np_array_results.append(np.zeros((1,1024,1024)))
+            list_np_array_results.append(np_array[None,0, :, :])
 
 
         return list_np_array_results
 
 
-
-
-        return list_np_array
 
 
 
