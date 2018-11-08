@@ -70,9 +70,7 @@ def create_super_tile_list(tile_object, zoom_level=2):
         for tile, tile_pos in zip(tile_object_list, tile_position_list):
             
             tile_pos_np = np.asarray(tile_pos)
-            print(tile_pos_np)
-            print(tile_pos_np*2+rel_tile_pos)
-            
+
             child_tile_list.extend(mercantile.children(tile))
             child_tile_position.extend(tile_pos_np*2+rel_tile_pos)
 
