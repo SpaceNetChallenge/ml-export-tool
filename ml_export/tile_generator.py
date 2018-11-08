@@ -125,7 +125,8 @@ def create_super_tile_image(tile_object, address, zoom_level=2, indexes=None, ti
         tmp_tile, mask = main.tile(address,
                                    tile_coords.x,
                                    tile_coords.y,
-                                   tile_coords.z
+                                   tile_coords.z,
+                                   indexes=indexes
                                    )
 
         super_restile[:, tile_place_calc[0]:tile_place_calc[1], tile_place_calc[2]:tile_place_calc[3]] = tmp_tile
