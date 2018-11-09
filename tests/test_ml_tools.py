@@ -14,7 +14,8 @@ import rasterio
 
 
 model_dictionary = '{"model_file": "test.hdf5", "model_description": "Passthrough Model", "model_version": "0.1", "model_speed": 20}' #  # numpy arrays per second
-raster_address = "s3://spacenet-dataset/AOI_2_Vegas/resultData/AOI_2_Vegas_MULPS_v13_cloud.tiff"
+#raster_address = "s3://spacenet-dataset/AOI_2_Vegas/resultData/AOI_2_Vegas_MULPS_v13_cloud.tiff"
+raster_address = "s3://spacenet-dataset/AOI_2_Vegas/srcData/rasterData/AOI_2_Vegas_MUL-PanSharpen_Cloud.tif"
 
 
 
@@ -44,7 +45,8 @@ def test_ml_model_tiles():
     tile_coord = mercantile.tile(-115.24, 36.1986, 17)
     super_res_tile = tile_generator.create_super_tile_image(tile_coord,
                                                             address=raster_address,
-                                                            zoom_level=2)
+                                                            desired_zoom_level=19,
+                                                            indexes=[1])
 
     testmodel = mlbase.mlmodel(model_dictionary)
 

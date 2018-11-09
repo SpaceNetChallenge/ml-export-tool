@@ -3,10 +3,23 @@ import mercantile
 from rio_tiler import main
 import numpy as np
 import logging
-
+import urllib
+import cv2
 logging.basicConfig(format='%(levelname)s:%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
 
 
+
+def get_tile_from_tms(html_template, tile_obj, rgb=True):
+#    html_template = "https://14ffxwyw5l.execute-api.us-east-1.amazonaws.com/production/tiles/{z}/{x}/{y}.jpg?url=s3://spacenet-dataset/AOI_2_Vegas/srcData/rasterData/AOI_2_Vegas_MUL-PanSharpen_Cloud.tif&rgb=5,3,2&linearStretch=true&band1=5&band2=7"
+
+    resp = urllib.request.urlopen(html_template.format(x=tile_obj.x, y=tile_obj.y, z=tile_obj.z))
+    image = np.asarray(bytearray(resp.read()), dtype="uint8")
+    image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+    logging.debug(html_template.format(x=tile_obj.x, y=tile_obj.y, z=tile_obj.z))
+    if rgb:
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+    return image
 
 
 
@@ -42,8 +55,8 @@ def get_tile_list(geom,
     return tile_list
 
 
-def create_super_tile_list(tile_object, zoom_level=2):
-
+def create_super_tile_list(tile_object, desired_zoom_level=19):
+    ## TODO Implement Stopping at desired zoom_level
     """Generate the Tile List for The Tasking List
 
     Parameters
@@ -51,8 +64,7 @@ def create_super_tile_list(tile_object, zoom_level=2):
     tile_object: mercantile tile object
 
 
-    zoom_level : int Zoom Level for Tiles
-        One or more zoom levels to superres.
+    desired_zoom_level : int Zoom Level For interior tiles ie This object should be built of z19 tiles.
 
     Returns
     ------
@@ -64,7 +76,9 @@ def create_super_tile_list(tile_object, zoom_level=2):
     
     tile_object_list = [tile_object]
     tile_position_list = [(0, 0)]
-    for zoom in range(zoom_level):
+
+    while tile_object_list[0].z < desired_zoom_level:
+
         child_tile_list = []
         child_tile_position = []
         for tile, tile_pos in zip(tile_object_list, tile_position_list):
@@ -80,7 +94,36 @@ def create_super_tile_list(tile_object, zoom_level=2):
     return tile_object_list, tile_position_list
 
 
-def create_super_tile_image(tile_object, address, zoom_level=2, indexes=None, tile_size=256):
+def create_super_tile_image(tile_object, address, desired_zoom_level=19, indexes=None, tile_size=256, cog=True):
+    """Generate the Tile List for The Tasking List
+
+    Parameters
+    ----------
+    tile_object: mercantile tile object
+    address: COG location
+    desired_zoom_level : int Zoom Level For interior tiles ie This object should be built of z19 tiles.
+
+    indexes: List of indexes for address.  This is incase it is more than 3-bands
+    tile_size: int tile_size for query.  Standard is 256, 256
+
+
+
+    Returns
+    ------
+    super_restile: returns numpy array of size (len(indexes,(2**zoom_level)*tile_size,(2**zoom_level)*tile_size)
+    """
+
+    if cog:
+        return create_super_tile_image_cog(tile_object, address, desired_zoom_level=desired_zoom_level, indexes=indexes, tile_size=tile_size)
+
+    else:
+
+        return create_super_tile_image_tms(tile_object, address, desired_zoom_level=desired_zoom_level, indexes=indexes, tile_size=tile_size)
+
+
+
+
+def create_super_tile_image_cog(tile_object, address, desired_zoom_level=19, indexes=None, tile_size=256):
 
     """Generate the Tile List for The Tasking List
 
@@ -88,8 +131,8 @@ def create_super_tile_image(tile_object, address, zoom_level=2, indexes=None, ti
     ----------
     tile_object: mercantile tile object
     address: COG location
-    zoom_level : int Zoom Level for Tiles
-        One or more zoom levels.
+    desired_zoom_level : int Zoom Level For interior tiles ie This object should be built of z19 tiles.
+
     indexes: List of indexes for address.  This is incase it is more than 3-bands
     tile_size: int tile_size for query.  Standard is 256, 256
 
@@ -103,10 +146,12 @@ def create_super_tile_image(tile_object, address, zoom_level=2, indexes=None, ti
     if indexes is None:
         indexes = [1, 2, 3]
     
-    tile_object_list, tile_position_list = create_super_tile_list(tile_object, zoom_level=2)
-    
+    tile_object_list, tile_position_list = create_super_tile_list(tile_object, desired_zoom_level=desired_zoom_level)
+
+    zoom_level = tile_object_list[0].z - tile_object.z
+    super_tile_size = int((2 ** zoom_level) * tile_size)
     super_restile = np.zeros(
-        (len(indexes), (2 ** zoom_level) * tile_size, (2 ** zoom_level) * tile_size),
+        (len(indexes), super_tile_size, super_tile_size),
         dtype=float
     )
 
@@ -131,4 +176,57 @@ def create_super_tile_image(tile_object, address, zoom_level=2, indexes=None, ti
 
         super_restile[:, tile_place_calc[0]:tile_place_calc[1], tile_place_calc[2]:tile_place_calc[3]] = tmp_tile
         
+    return super_restile
+
+
+def create_super_tile_image_tms(tile_object, html_template, desired_zoom_level=19, indexes=None, tile_size=256):
+    """Generate the Tile List for The Tasking List
+
+    Parameters
+    ----------
+    tile_object: mercantile tile object
+    html_template: COG location
+    desired_zoom_level : int Zoom Level For interior tiles ie This object should be built of z19 tiles.
+
+    indexes: List of indexes for address.  This is incase it is more than 3-bands
+    tile_size: int tile_size for query.  Standard is 256, 256
+
+
+
+    Returns
+    ------
+    super_restile: returns numpy array of size (len(indexes,(2**zoom_level)*tile_size,(2**zoom_level)*tile_size)
+    """
+
+    if indexes is None:
+        indexes = [1, 2, 3]
+
+    tile_object_list, tile_position_list = create_super_tile_list(tile_object, desired_zoom_level=desired_zoom_level)
+
+    zoom_level = tile_object_list[0].z - tile_object.z
+    super_tile_size = int((2 ** zoom_level) * tile_size)
+
+    super_restile = np.zeros(
+        (len(indexes), super_tile_size, super_tile_size),
+        dtype=float
+    )
+
+    for tile_coords, (tilePlace_x, tilePlace_y) in zip(tile_object_list, tile_position_list):
+        tile_place_calc = [
+            tilePlace_x * tile_size,
+            (tilePlace_x + 1) * tile_size,
+            tilePlace_y * tile_size,
+            (tilePlace_y + 1) * tile_size
+        ]
+
+        # print
+        logging.debug(tile_place_calc)
+
+        tmp_tile = get_tile_from_tms(html_template, tile_coords, rgb=True)
+
+        if tmp_tile.shape[0] == 512:
+            tmp_tile = cv2.resize(tmp_tile, (256,256), interpolation=cv2.INTER_CUBIC)
+
+        super_restile[:, tile_place_calc[0]:tile_place_calc[1], tile_place_calc[2]:tile_place_calc[3]] = np.moveaxis(tmp_tile, 2, 0)
+
     return super_restile
