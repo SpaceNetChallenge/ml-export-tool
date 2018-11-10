@@ -3,21 +3,41 @@ import mercantile
 from rio_tiler import main
 import numpy as np
 import logging
-import urllib
+import requests
+from PIL import Image
+from io import BytesIO
 import cv2
 logging.basicConfig(format='%(levelname)s:%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
 
 
 
-def get_tile_from_tms(html_template, tile_obj, rgb=True):
+def get_tile_from_tms(html_template, tile_obj, no_data=0):
 #    html_template = "https://14ffxwyw5l.execute-api.us-east-1.amazonaws.com/production/tiles/{z}/{x}/{y}.jpg?url=s3://spacenet-dataset/AOI_2_Vegas/srcData/rasterData/AOI_2_Vegas_MUL-PanSharpen_Cloud.tif&rgb=5,3,2&linearStretch=true&band1=5&band2=7"
 
-    resp = urllib.request.urlopen(html_template.format(x=tile_obj.x, y=tile_obj.y, z=tile_obj.z))
-    image = np.asarray(bytearray(resp.read()), dtype="uint8")
-    image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+
+
+    try:
+        r = requests.get(html_template.format(x=tile_obj.x, y=tile_obj.y, z=tile_obj.z), stream=True, timeout=0.1)
+
+        if r.status_code == 200:
+
+            image = np.array(Image.open(BytesIO(r.content)))
+
+        else:
+            image = np.full((256, 256, 3), fill_value=no_data)
+
+    except:
+        image = np.full((256, 256, 3), fill_value=no_data)
+        logging.error("timeout")
+
+
+
+
+
+
     logging.debug(html_template.format(x=tile_obj.x, y=tile_obj.y, z=tile_obj.z))
-    if rgb:
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+
 
     return image
 
@@ -200,6 +220,8 @@ def create_super_tile_image_tms(tile_object, html_template, desired_zoom_level=1
 
     if indexes is None:
         indexes = [1, 2, 3]
+    # Shift indexes to be zero rated
+    indexes = list(np.asarray(indexes)-1)
 
     tile_object_list, tile_position_list = create_super_tile_list(tile_object, desired_zoom_level=desired_zoom_level)
 
@@ -222,10 +244,14 @@ def create_super_tile_image_tms(tile_object, html_template, desired_zoom_level=1
         # print
         logging.debug(tile_place_calc)
 
-        tmp_tile = get_tile_from_tms(html_template, tile_coords, rgb=True)
+        tmp_tile = get_tile_from_tms(html_template, tile_coords)
 
         if tmp_tile.shape[0] == 512:
             tmp_tile = cv2.resize(tmp_tile, (256,256), interpolation=cv2.INTER_CUBIC)
+
+        if tmp_tile.shape[2] > len(indexes):
+            tmp_tile = tmp_tile[:,:, indexes]
+
 
         super_restile[:, tile_place_calc[0]:tile_place_calc[1], tile_place_calc[2]:tile_place_calc[3]] = np.moveaxis(tmp_tile, 2, 0)
 
