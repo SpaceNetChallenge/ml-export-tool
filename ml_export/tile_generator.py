@@ -16,8 +16,8 @@ def get_tile_from_tms(html_template, tile_obj, no_data=0):
 
 
 
-    try:
-        r = requests.get(html_template.format(x=tile_obj.x, y=tile_obj.y, z=tile_obj.z), stream=True, timeout=0.1)
+    if True: #try:
+        r = requests.get(html_template.format(x=tile_obj.x, y=tile_obj.y, z=tile_obj.z), stream=True)
 
         if r.status_code == 200:
 
@@ -26,9 +26,10 @@ def get_tile_from_tms(html_template, tile_obj, no_data=0):
         else:
             image = np.full((256, 256, 3), fill_value=no_data)
 
-    except:
-        image = np.full((256, 256, 3), fill_value=no_data)
-        logging.error("timeout")
+    #except:
+    #    image = np.full((256, 256, 3), fill_value=no_data)
+    #    logging.error("timeout: {html}".format(html=html_template.format(x=tile_obj.x, y=tile_obj.y, z=tile_obj.z)))
+
 
 
 
