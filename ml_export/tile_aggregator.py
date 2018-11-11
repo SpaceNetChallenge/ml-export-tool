@@ -31,25 +31,28 @@ def calculate_zoom_tile_transform(zoom_level, tile_object, tile_creation_buffer=
     # Calculate XY BBox in meters of tile_object
     bbox_xy = mercantile.xy_bounds(tile_object)
 
-    transform = Affine(meters_per_pixel, 0, bbox_xy.left, 0,
-                       -meters_per_pixel, bbox_xy.top)
-    height = int((bbox_xy.top - bbox_xy.bottom) / meters_per_pixel) + tile_creation_buffer
-    width = int((bbox_xy.right - bbox_xy.left) / meters_per_pixel) + tile_creation_buffer
+    transform = Affine(meters_per_pixel, 0, bbox_xy.left - tile_creation_buffer, 0,
+                       -meters_per_pixel, bbox_xy.top + tile_creation_buffer)
+    height = int((bbox_xy.top - bbox_xy.bottom) / meters_per_pixel)
+    width = int((bbox_xy.right - bbox_xy.left) / meters_per_pixel)
 
     print(height)
     print(width)
 
-    return transform, width, height
+    return transform, width + tile_creation_buffer * 2, height + tile_creation_buffer * 2
 
 
 def create_webmercator_cog_profile(tile_object, zoom_level, num_channels, dtype=np.uint8, tile_creation_buffer=250):
     """create webmercator cog_profile for output"""
 
-    transform, width, height = calculate_zoom_tile_transform(zoom_level=zoom_level, tile_object=tile_object)
+    transform, width, height = calculate_zoom_tile_transform(zoom_level=zoom_level,
+                                                             tile_object=tile_object,
+                                                             tile_creation_buffer=tile_creation_buffer
+                                                             )
 
     cog_profile = DefaultGTiffProfile(count=num_channels,
-                                      height=height + tile_creation_buffer,
-                                      width=width + tile_creation_buffer,
+                                      height=height,
+                                      width=width,
                                       crs="EPSG:3857",
                                       transform=transform,
                                       dtype=dtype)
@@ -97,46 +100,69 @@ def build_cog_from_tiles(file_name,
 
 
 def build_cog_from_tiles_gen(file_name,
-                             large_tile_object,
-                             raster_tile_server_template,
-                             desired_small_tile_zoom_level=17,
-                             desired_super_res_tile_zoom_level=19,
-                             cog=False,
-                             indexes=None,
-                             tile_size=256,
-                             batch_size=4,
-                             num_workers=4
-                             ):
+                                large_tile_object,
+                                raster_tile_server_template,
+                                desired_small_tile_zoom_level=17,
+                                desired_super_res_tile_zoom_level=19,
+                                cog=False,
+                                indexes=None,
+                                tile_size=256,
+                                batch_size=4,
+                                num_workers=4,
+                                tile_dataset_class=TileClassDataset,
+                                detection_module=None
+                                ):
     if indexes is None:
         indexes = [1, 2, 3]
         num_channels = len(indexes)
     else:
         num_channels = len(indexes)
 
+    if detection_module is not None:
+        num_channels = detection_module.num_channels
+
     large_cog_profile = create_webmercator_cog_profile(large_tile_object,
                                                        desired_super_res_tile_zoom_level,
-                                                       num_channels=num_channels)
+                                                       num_channels=num_channels,
+                                                       dtype=np.float32)
 
     with rasterio.open(file_name, 'w', **large_cog_profile) as dst_dataset:
 
-        tile_dataset = TileClassDataset(root_tile_obj=large_tile_object,
-                                        raster_location=raster_tile_server_template,
-                                        desired_zoom_level=desired_small_tile_zoom_level,
-                                        super_res_zoom_level=desired_super_res_tile_zoom_level,
-                                        cog=cog,
-                                        tile_size=tile_size,
-                                        indexes=indexes
-                                        )
+        tile_dataset = tile_dataset_class(root_tile_obj=large_tile_object,
+                                          raster_location=raster_tile_server_template,
+                                          desired_zoom_level=desired_small_tile_zoom_level,
+                                          super_res_zoom_level=desired_super_res_tile_zoom_level,
+                                          cog=cog,
+                                          tile_size=tile_size,
+                                          indexes=indexes
+                                          )
 
-        tile_iterator = DataLoader(tile_dataset, batch_size=4,
-                                   shuffle=False, num_workers=4)
+        tile_iterator = DataLoader(tile_dataset,
+                                   batch_size=batch_size,
+                                   shuffle=False,
+                                   num_workers=num_workers)
 
         for super_res_tile_batch, small_tile_obj_batch in tqdm(tile_iterator):
 
-            for super_res_tile, small_tile_object_tensor in zip(super_res_tile_batch, small_tile_obj_batch):
-                left, bottom, right, top = small_tile_object_tensor.numpy()
+            super_res_tile_np = super_res_tile_batch.numpy()
+
+            if detection_module is not None:
+                super_res_tile_results = detection_module.predict_batch(super_res_tile_batch.numpy())
+
+
+            else:
+                super_res_tile_results = super_res_tile_np
+
+            for super_res_tile, small_tile_object_tensor in zip(super_res_tile_results,
+                                                                zip(small_tile_obj_batch[0].numpy(),
+                                                                    small_tile_obj_batch[1].numpy(),
+                                                                    small_tile_obj_batch[2].numpy(),
+                                                                    small_tile_obj_batch[3].numpy())):
+                left, bottom, right, top = small_tile_object_tensor
 
                 dst_window = rasterio.windows.from_bounds(left, bottom, right, top,
                                                           transform=large_cog_profile['transform'])
 
-                dst_dataset.write(super_res_tile.numpy().astype(large_cog_profile['dtype']), window=dst_window)
+                dst_dataset.write(super_res_tile.astype(large_cog_profile['dtype']), window=dst_window)
+
+    return file_name
