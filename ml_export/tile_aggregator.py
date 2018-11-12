@@ -57,6 +57,17 @@ def create_webmercator_cog_profile(tile_object, zoom_level, num_channels, dtype=
                                       transform=transform,
                                       dtype=dtype)
 
+
+    cog_profile.update({
+        "driver": "GTiff",
+        "interleave": "pixel",
+        "tiled": True,
+        "blockxsize": 512,
+        "blockysize": 512,
+        "compress": "LZW"
+    }
+    )
+
     return cog_profile
 
 
