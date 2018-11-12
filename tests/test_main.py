@@ -13,7 +13,7 @@ import logging
 import rasterio
 
 
-raster_tile_server = "https://14ffxwyw5l.execute-api.us-east-1.amazonaws.com/production/tiles/{z}/{x}/{y}.jpg?url=s3://spacenet-dataset/AOI_2_Vegas/srcData/rasterData/AOI_2_Vegas_MUL-PanSharpen_Cloud.tif&rgb=5,3,2&linearStretch=true&band1=5&band2=7&tilesize=256"
+raster_tile_server = "https://tiles.openaerialmap.org/5ae36dd70b093000130afdd4/0/5ae36dd70b093000130afdd5/{z}/{x}/{y}.png"
 raster_address = "s3://spacenet-dataset/AOI_2_Vegas/resultData/AOI_2_Vegas_MULPS_v13_cloud.tiff"
 
 PREFIX = os.path.join(os.path.dirname(__file__), 'fixtures')
@@ -51,7 +51,7 @@ def test_super_res():
 
 def test_super_res_tms():
 
-    tile_coord = mercantile.tile(-115.24, 36.1986, 17)
+    tile_coord = mercantile.tile(39.299515932798386, -6.080908028740757, 17)
 
     super_res_tile = tile_generator.create_super_tile_image(tile_coord,
                                                             address=raster_tile_server,
