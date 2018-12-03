@@ -1,3 +1,8 @@
+import boto3
+import json
+import tempfile
+
+
 def create_stac_item(id,
                      geometry,
                      stac_properties,
@@ -105,6 +110,25 @@ def build_stac_assets(raster_url, raster_binary_thresh, raster_mask_binary_url=N
 
 
     return stac_assets
+
+
+def save_stac_item(stac_dict, stac_bucket, stac_key):
+
+
+    s3 = boto3.client('s3')
+    s3 = boto3.client('s3')
+
+    with tempfile.NamedTemporaryFile(mode='w+') as tf:
+        tfname = tf.name
+
+
+
+        json.dump(stac_dict, tf)
+        tf.seek(0)
+        tf.flush()
+        s3.upload_file(tfname, stac_bucket, stac_key)
+
+
 
 
 
