@@ -13,14 +13,43 @@ A user would like to perform machine learning against an area.  They provide an 
     3. Output formats for result.  
 
 
-## Export End Points
+# Interface End Points
 
+### GET
 1. TMS
 2. Vector Tiles
 3. GeoJson
 4. Cloud Optimized GeoTiff
 
+### Push:
+1. New ML Prediction
+2. New STAC-ITEM 
 
+
+
+## Storage Layer:
+We will use the [Spatial Temporal Access Catalog Spec](https://github.com/radiantearth/stac-spec) for Storage Documentation 9
+STAC-ITEMS:  Each machine learning output will be stored as an STAC ITEM.  Binary masks can be stored as a Cloud Optimized GeoTiff to encourage easy processing
+        
+    *   STAC-ITEMS can be added to Catalog Collections based on TaskID.  
+    STAC-ITEMS produced by the ML Service should have at least 3 assets:
+    
+        *  results_cog
+        *  results_cog_binary
+        *  results_cog_geojson
+    
+    *   STAC-ITEMs for other apis can be documnted
+        * [AI for Earth](https://github.com/Microsoft/AIforEarth-API-Development/blob/master/Quickstart.md)
+         
+    
+    
+### Why STAC:
+*   STAC is an industry initiative to create a overarching, cloud native searchable catalog of geospatial data.  
+*   Machine Learning outputs in mapping situations are Spatial and Temporal Items.
+*   This will allow cumalitive machine learning results to queable and should allow flexibility as we add new types of data
+*   An example of the SpaceNet STAC-Browser can be found at [SpaceNet-STAC](https://spacenet-stac.netlify.com/)
+       
+###
 
 
 ## Test items:

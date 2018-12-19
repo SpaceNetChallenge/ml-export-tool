@@ -16,7 +16,9 @@ with open('README.MD') as f:
     readme = f.read()
 
 # Runtime requirements.
-inst_reqs = ["rio-tiler~=1.0rc2", "shapely", "mercantile", "numpy", "requests"]
+inst_reqs = ["rio-tiler~=1.0rc2", "rasterio[s3]~=1.0.0", "shapely", "mercantile",
+             "numpy", "requests", "affine", "tqdm", "torchvision", "boto3",
+             "sat-stac"]
 
 extra_reqs = {
     'test': ['mock', 'pytest', 'pytest-cov', 'codecov']}
@@ -30,7 +32,6 @@ setup(name='ml-export',
           'Intended Audience :: Science/Research',
           'License :: OSI Approved :: BSD License',
           'Programming Language :: Python :: 3.6',
-          'Programming Language :: Python :: 2.7',
           'Topic :: Scientific/Engineering :: GIS'],
       keywords='raster aws tiler gdal rasterio spacenet machinelearning hotosm cog',
       author=u"David Lindenbaum",

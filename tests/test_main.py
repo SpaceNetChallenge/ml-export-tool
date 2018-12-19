@@ -11,6 +11,9 @@ import numpy as np
 from ml_export import tile_generator
 import logging
 import rasterio
+
+
+raster_tile_server = "https://tiles.openaerialmap.org/5ae36dd70b093000130afdd4/0/5ae36dd70b093000130afdd5/{z}/{x}/{y}.png"
 raster_address = "s3://spacenet-dataset/AOI_2_Vegas/resultData/AOI_2_Vegas_MULPS_v13_cloud.tiff"
 
 PREFIX = os.path.join(os.path.dirname(__file__), 'fixtures')
@@ -20,6 +23,8 @@ mask_address = '{}/my-bucket/test_super_tile.tif'.format(PREFIX)
 with rasterio.open(mask_address) as src:
     super_tile_test = src.read()
     src_profile = src.profile
+
+logging.basicConfig(format='%(levelname)s:%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
 
 
 def test_import():
@@ -33,229 +38,30 @@ def test_super_res():
 
     super_res_tile = tile_generator.create_super_tile_image(tile_coord,
                                                             address=raster_address,
-                                                            zoom_level=2)
+                                                            desired_zoom_level=19,
+                                                            indexes=[1],
+                                                            cog=True)
+
+
+    #TODO build better 3 channel test
+    np.testing.assert_allclose(super_res_tile.astype(int)
+                               , super_tile_test[None,0,:,:].astype(int))
 
 
 
-    np.testing.assert_allclose(super_res_tile.astype(int), super_tile_test.astype(int))
+def test_super_res_tms():
 
+    tile_coord = mercantile.tile(39.299515932798386, -6.080908028740757, 17)
 
-
-
-
-
-
-
-
-#
-# utmX, utmY = 658029, 4006947
-# ll_x = utmX
-# ur_x = utmX + 500
-# ll_y = utmY
-# ur_y = utmY + 500
-# stride_size_meters = 300
-# cell_size_meters = 400
-# tile_size_pixels = 1600
-# spacenetPath = "s3://spacenet-dataset/AOI_2_Vegas/srcData/rasterData/AOI_2_Vegas_MUL-PanSharpen_Cloud.tif"
-#
-# PREFIX = os.path.join(os.path.dirname(__file__), 'fixtures')
-#
-# ADDRESS = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif'.format(PREFIX)
-# ADDRESS_ALPHA = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif'.format(PREFIX)
-# ADDRESS_NODATA = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_nodata.tif'.format(PREFIX)
-# geojsonPath = "{}/my-bucket/spacenet_test/las-vegas_nevada_osm_buildings.geojson".format(PREFIX)
-#
-#
-#
-# def test_calculate_utm_epsg():
-#
-#     wgs_bounds = utils.get_wgs84_bounds(ADDRESS)
-#     print(wgs_bounds)
-#     utm_crs = utils.calculate_UTM_crs(wgs_bounds)
-#     print(utm_crs)
-#     assert utm_crs=='+proj=utm +zone=13 +north +ellps=WGS84 +datum=WGS84 +units=m +no_defs'
-#
-#
-# def test_grid_creation():
-#
-#     address = spacenetPath
-#
-#     with rasterio.open(address) as src:
-#
-#         wgs_bounds = utils.get_wgs84_bounds(src)
-#         utm_EPSG = utils.calculate_UTM_crs(wgs_bounds)
-#         utm_bounds = utils.get_utm_bounds(src, utm_EPSG)
-#         print(utm_bounds)
-#         cells_list_dict = main.calculate_analysis_grid(utm_bounds, stride_size_meters=stride_size_meters, cell_size_meters=cell_size_meters)
-#         print(len(cells_list_dict))
-#
-#     assert len(cells_list_dict[0][0]) == 4
-#     assert ((cells_list_dict[0][0][2]-cells_list_dict[0][0][0]), (cells_list_dict[0][0][3]-cells_list_dict[0][0][1])) == (cell_size_meters, cell_size_meters)
-#     assert (cells_list_dict[0][1][1] - cells_list_dict[0][0][1]) == stride_size_meters
-#     assert len(cells_list_dict[0]) == 2491
-#
-#
-#
-#
-# def test_return_tile():
-#
-#     address = spacenetPath
-#
-#     with rasterio.open(address) as src:
-#
-#         wgs_bounds = utils.get_wgs84_bounds(src)
-#         utm_crs = utils.calculate_UTM_crs(wgs_bounds)
-#         utm_bounds = utils.get_utm_bounds(src, utm_crs)
-#
-#         cells_list = main.calculate_analysis_grid(utm_bounds, stride_size_meters=stride_size_meters, cell_size_meters=cell_size_meters)
-#
-#         random_cell = random.choice(cells_list[0])
-#         ll_x, ll_y, ur_x, ur_y = random_cell
-#         print(random_cell)
-#         tile, mask, window, window_transform = main.tile_utm(src, ll_x, ll_y, ur_x, ur_y, indexes=None, tilesize=tile_size_pixels, nodata=None, alpha=None,
-#                  dst_crs=utm_crs)
-#
-#         print(np.shape(tile))
-#         assert np.shape(tile) == (8, tile_size_pixels, tile_size_pixels)
-#
-#
-# def test_return_vector_gdf():
-#
-#     utm_crs=utils.calculate_UTM_crs([-115.30170, 36.15604, -115.30170, 36.15604])
-#
-#     gdf = vector_utils.read_vector_file(geojsonPath)
-#     gdf.head()
-#     print(utm_crs)
-#     gdf_utm = vector_utils.transformToUTM(gdf, utm_crs=utm_crs)
-#
-#     utmX, utmY = 658029, 4006947
-#     ll_x = utmX
-#     ur_x = utmX + 500
-#     ll_y = utmY
-#     ur_y = utmY + 500
-#     stride_size_meters = 300
-#     cell_size_meters = 400
-#     tile_size_pixels = 1600
-#
-#     small_gdf = vector_utils.vector_tile_utm(gdf_utm, tile_bounds=[ll_x, ll_y, ur_x, ur_y])
-#
-#     print(small_gdf.head())
-#
-#     assert small_gdf.shape[0]>0
-#
-#
-# def test_return_vector_tile():
-#     utm_crs = utils.calculate_UTM_crs([-115.30170, 36.15604, -115.30170, 36.15604])
-#
-#     gdf = vector_utils.read_vector_file(geojsonPath)
-#     gdf.head()
-#     print(utm_crs)
-#     gdf = vector_utils.transformToUTM(gdf, utm_crs=utm_crs)
-#
-#     utmX, utmY = 658029, 4006947
-#     ll_x = utmX
-#     ur_x = utmX + 500
-#     ll_y = utmY
-#     ur_y = utmY + 500
-#     stride_size_meters = 300
-#     cell_size_meters = 400
-#     tile_size_pixels = 1600
-#
-#     small_gdf = vector_utils.vector_tile_utm(gdf, tile_bounds=[ll_x, ll_y, ur_x, ur_y])
-#
-#     img = vector_utils.rasterize_gdf(small_gdf, src_shape=(tile_size_pixels, tile_size_pixels))
-#
-#     print(img.shape)
-#
-#     assert img.shape[0] == 1600
-#
-#
-# def test_return_tile_full():
-#
-#     ## Set for specific tile in Las Vegas
-#     utm_crs = utils.calculate_UTM_crs([-115.30170, 36.15604, -115.30170, 36.15604])
-#     gdf = vector_utils.read_vector_file(geojsonPath)
-#     gdf.head()
-#     gdf = vector_utils.transformToUTM(gdf, utm_crs=utm_crs)
-#
-#     utmX, utmY = 658029, 4006947
-#     ll_x = utmX
-#     ur_x = utmX + 500
-#     ll_y = utmY
-#     ur_y = utmY + 500
-#     stride_size_meters = 300
-#     cell_size_meters = 400
-#     tile_size_pixels = 1600
-#
-#     address = spacenetPath
-#
-#     with rasterio.open(address) as src:
-#
-#         src_profile = src.profile
-#
-#
-#         tile, mask, window, window_transform = main.tile_utm(src, ll_x, ll_y, ur_x, ur_y,
-#                                                      indexes=None,
-#                                                      tilesize=tile_size_pixels,
-#                                                      nodata=None,
-#                                                      alpha=None,
-#                                                      dst_crs=utm_crs
-#                                                      )
-#
-#         print(np.shape(tile))
-#         assert np.shape(tile) == (8, tile_size_pixels, tile_size_pixels)
-#
-#         small_gdf = vector_utils.vector_tile_utm(gdf, tile_bounds=[ll_x, ll_y, ur_x, ur_y])
-#         print(small_gdf.shape)
-#         small_gdf.to_file(os.path.join(PREFIX, "testTiff_Label.geojson"), driver='GeoJSON')
-#         img = vector_utils.rasterize_gdf(small_gdf,
-#                                          src_shape=(tile_size_pixels, tile_size_pixels),
-#                                          src_transform=window_transform,
-#                                     )
-#         print("Label Count Burn {}:".format(np.sum(img)))
-#         assert img.shape == (tile_size_pixels, tile_size_pixels)
-#
-#
-#         dst_profile = src_profile
-#         dst_profile.update({'transform': window_transform,
-#                     'crs': utm_crs,
-#                     'width': tile_size_pixels,
-#                     'height': tile_size_pixels,
-#                             'count': 1,
-#                             'dtype': rasterio.uint8
-#
-#                    })
-#
-#         with rasterio.open(os.path.join(PREFIX, "testTiff_Label.tif"), 'w',
-#                                         **dst_profile) as dst:
-#
-#             dst.write(img, indexes=1)
-#
-#         dst_profile = src_profile
-#         dst_profile.update({'transform': window_transform,
-#                     'crs': utm_crs,
-#                     'width': tile_size_pixels,
-#                     'height': tile_size_pixels,
-#                             'count': 8,
-#                             'dtype': rasterio.uint16
-#                    })
-#
-#         with rasterio.open(os.path.join(PREFIX, "testTiff_Image.tif"), 'w',
-#                            **dst_profile) as dst:
-#
-#             dst.write(tile)
-#
-#
-#
-#
+    super_res_tile = tile_generator.create_super_tile_image(tile_coord,
+                                                            address=raster_tile_server,
+                                                            desired_zoom_level=19,
+                                                            indexes=[1,2,3],
+                                                            cog=False)
 
 
 
 
 
 
-
-
-
-
-
+#
