@@ -90,7 +90,7 @@ class ml_tf_serving():
 
 
     def __init__(self, api_location, output_num_channels=1, debug=False):
-        ''' Inititiate model '''
+        ''' Inititialize model '''
 
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
@@ -124,9 +124,11 @@ class ml_tf_serving():
         return self.model_speed * tiles_length
 
     def load_model_dict(self):
+        # TODO: IMPLEMENT
         return 0
 
     def predict(self, np_array):
+        # TODO: IMPLEMENT
         return np_array[None, 0, :, :]
 
     def predict_batch(self, super_res_tile_batch):
