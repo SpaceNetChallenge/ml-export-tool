@@ -51,3 +51,9 @@ This module appears to be intended for creating Torch datasets for OpenCV models
   - see documentation in the file
   - operations:
     1. creates `tiles` at desired zoom level using `mercantile.tiles`
+
+## Notes on `ml_export/tm_interface.py`
+- Implements API queries to get AOI geometry for a specific task from the TM API.
+
+## Notes on `ml_export/utils.py`
+- Utilities for generating overviews, managing S3 storage of imagery, and creating STAC items for inference outputs.

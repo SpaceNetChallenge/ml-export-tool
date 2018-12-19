@@ -6,9 +6,9 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-class mlmodel():
+class MLModel():
 
-    """mlmodel test case.
+    """MLModel test case.
     The ml model base class should have 4 functions
 
     init:
@@ -70,8 +70,8 @@ class mlmodel():
         return list_np_array_results
 
 
-class ml_tf_serving():
-    """mlmodel test case.
+class MLTFServing():
+    """MLTFServing model test case.
 
     The ml model base class should have 4 functions
 

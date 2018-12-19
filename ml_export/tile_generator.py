@@ -16,7 +16,8 @@ logging.basicConfig(format='%(levelname)s:%(asctime)s %(message)s',
 def get_tile_from_tms(html_template, tile_obj, no_data=0):
 #    html_template = "https://14ffxwyw5l.execute-api.us-east-1.amazonaws.com/production/tiles/{z}/{x}/{y}.jpg?url=s3://spacenet-dataset/AOI_2_Vegas/srcData/rasterData/AOI_2_Vegas_MUL-PanSharpen_Cloud.tif&rgb=5,3,2&linearStretch=true&band1=5&band2=7"
     if True: #try:  # ermagerd
-        r = requests.get(html_template.format(x=tile_obj.x, y=tile_obj.y, z=tile_obj.z), stream=True)
+        r = requests.get(html_template.format(x=tile_obj.x, y=tile_obj.y,
+                                              z=tile_obj.z), stream=True)
         if r.status_code == 200:
             image = np.array(Image.open(BytesIO(r.content)))
         else:
@@ -25,12 +26,12 @@ def get_tile_from_tms(html_template, tile_obj, no_data=0):
     #except:
     #    image = np.full((256, 256, 3), fill_value=no_data)
     #    logging.error("timeout: {html}".format(html=html_template.format(x=tile_obj.x, y=tile_obj.y, z=tile_obj.z)))
-    logging.debug(html_template.format(x=tile_obj.x, y=tile_obj.y, z=tile_obj.z))
+    logging.debug(html_template.format(x=tile_obj.x, y=tile_obj.y,
+                                       z=tile_obj.z))
     return image
 
 
-def get_tile_list(geom,
-                  zoom=17):
+def get_tile_list(geom, zoom=17):
     """Generate the Tile List for The Tasking List
 
     Arguments
@@ -145,24 +146,24 @@ def create_super_tile_image_cog(tile_object, address, desired_zoom_level=19,
 
     """Generate the Tile List for The Tasking List
 
-    Parameters
-    ----------
-    tile_object: mercantile tile object
-    address: str
+    Arguments
+    ---------
+    tile_object : :py:class:`mercantile.Tile`
+    address : str
         COG location
     desired_zoom_level : int, optional
         Zoom Level For interior tiles ie This object should be built of z19
         tiles.
-    indexes: list, optional
+    indexes : list, optional
         Indexes for image if it is comprised of >3 bands.
-    tile_size: int
+    tile_size : int
         tile edge length for query. Defaults to 256.
 
     Returns
     ------
     super_res_tile: np.array
         np.array of shape
-        (len(indexes,(2**zoom_level)*tile_size,(2**zoom_level)*tile_size)
+        ``(len(indexes,(2**zoom_level)*tile_size,(2**zoom_level)*tile_size)``
     """
 
     if indexes is None:

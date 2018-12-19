@@ -1,11 +1,9 @@
-import os
 ## Note, for mac osx compatability import something from shapely.geometry before importing fiona or geopandas
 ## https://github.com/Toblerity/Shapely/issues/553  * Import shapely before rasterio or fioana
 from shapely import geometry
 import mercantile
 from ml_export import tile_generator
 from torch.utils.data import Dataset
-from ml_export.tile_class_generator import TileClassDataset
 
 
 def mlopencv(mlbase):
