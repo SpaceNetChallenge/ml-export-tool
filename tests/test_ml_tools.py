@@ -27,7 +27,7 @@ test_np_array_list = [test_np_array, test_np_array, test_np_array]
 
 def test_ml_model():
 
-    testmodel = mlbase.mlmodel(model_dictionary)
+    testmodel = mlbase.MLModel(model_dictionary)
 
     predict_result = testmodel.predict(test_np_array)
 
@@ -48,7 +48,7 @@ def test_ml_model_tiles():
                                                             desired_zoom_level=19,
                                                             indexes=[1])
 
-    testmodel = mlbase.mlmodel(model_dictionary)
+    testmodel = mlbase.MLModel(model_dictionary)
 
     predict_result = testmodel.predict(super_res_tile)
 
@@ -59,16 +59,3 @@ def test_ml_model_tiles():
     assert len(predict_batch_result) == 3
 
     assert predict_batch_result[0].shape == (1,1024,1024)
-
-
-
-
-
-
-
-
-
-
-
-
-
