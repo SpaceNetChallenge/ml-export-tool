@@ -1,5 +1,4 @@
 import mercantile
-from rio_tiler import main
 import numpy as np
 from affine import Affine
 import rasterio
@@ -239,7 +238,7 @@ def build_cog_from_tiles_gen(file_name, large_tile_object,
 
     with rasterio.open(file_name, 'w', **large_cog_profile) as dst_dataset:
 
-        tile_dataset = tile_dataset_class(
+        tile_dataset = TileClassDataset(
             root_tile_obj=large_tile_object,
             raster_location=raster_tile_server_template,
             desired_zoom_level=desired_small_tile_zoom_level,
@@ -259,7 +258,7 @@ def build_cog_from_tiles_gen(file_name, large_tile_object,
                 super_res_tile_results = super_res_tile_np
             for super_res_tile, small_tile_object_tensor in zip(
                     super_res_tile_results, zip(small_tile_obj_batch[i].numpy()
-                                                for i in range(batch_size))):
+                                                for i in range(len(small_tile_obj_batch)))):
                 left, bottom, right, top = small_tile_object_tensor
 
                 dst_window = rasterio.windows.from_bounds(
@@ -267,5 +266,7 @@ def build_cog_from_tiles_gen(file_name, large_tile_object,
                     transform=large_cog_profile['transform'])
                 dst_dataset.write(super_res_tile.astype(
                     large_cog_profile['dtype']), window=dst_window)
+
+        dst_dataset.close()
 
     return file_name

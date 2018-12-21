@@ -1,6 +1,5 @@
 """tests ml_export.tile_class_generator"""
 import os
-import pytest
 ## Note, for mac osx compatability import something from shapely.geometry before importing fiona or geopandas
 ## https://github.com/Toblerity/Shapely/issues/553  * Import shapely before rasterio or fioana
 from shapely import geometry
