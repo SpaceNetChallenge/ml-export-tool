@@ -11,7 +11,8 @@ from torch.utils.data import DataLoader
 
 logging.basicConfig(format='%(levelname)s:%(asctime)s %(message)s',
                     datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
-
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 def calculate_webmercator_meters_per_pixel(zoom_level):
     """Calculate webmercator pixel size based on zoom level."""
@@ -257,8 +258,12 @@ def build_cog_from_tiles_gen(file_name, large_tile_object,
             else:
                 super_res_tile_results = super_res_tile_np
             for super_res_tile, small_tile_object_tensor in zip(
-                    super_res_tile_results, zip(small_tile_obj_batch[i].numpy()
-                                                for i in range(len(small_tile_obj_batch)))):
+                    super_res_tile_results,
+                    zip(small_tile_obj_batch[0].numpy(),
+                        small_tile_obj_batch[1].numpy(),
+                        small_tile_obj_batch[2].numpy(),
+                        small_tile_obj_batch[3].numpy()
+                        )):
                 left, bottom, right, top = small_tile_object_tensor
 
                 dst_window = rasterio.windows.from_bounds(
