@@ -130,7 +130,6 @@ def create_super_tile_image(tile_object, address, desired_zoom_level=19,
         (len(indexes,(2**zoom_level)*tile_size,(2**zoom_level)*tile_size)
 
     """
-
     if cog:
         return create_super_tile_image_cog(
             tile_object, address, desired_zoom_level=desired_zoom_level,

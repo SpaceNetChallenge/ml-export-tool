@@ -57,3 +57,11 @@ This module appears to be intended for creating Torch datasets for OpenCV models
 
 ## Notes on `ml_export/utils.py`
 - Utilities for generating overviews, managing S3 storage of imagery, and creating STAC items for inference outputs.
+
+
+## Notes on implementation
+It looks like dave was trying to use `tile_aggregator.build_cog_from_tiles_gen` to
+
+# steps to the query that need to be executed
+## 1. TM User triggers request with API
+## 2. ml-export-tool initiates

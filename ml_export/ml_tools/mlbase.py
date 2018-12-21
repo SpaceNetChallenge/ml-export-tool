@@ -80,7 +80,6 @@ class MLTFServing():
     predict:  This should receive a np array of 3 x 1024 x 1024 and return a numpy array of 1x1024x1024
     predict_batch:  This should receive a list of np arrays of [np(3,1024,1024)] and return a list of [np(1,1024,1024]
 
-
     model_dictionary = {'model_file': "test.hdf5",
                 "model_description": "Passthrough Model",
                 "model_version": "0.1",
@@ -89,7 +88,8 @@ class MLTFServing():
     """
 
 
-    def __init__(self, api_location, output_num_channels=1, debug=False):
+    def __init__(self, api_location, output_num_channels=1, preproc_func=None,
+                 postproc_func=None, debug=False):
         ''' Inititialize model '''
 
         self.logger = logging.getLogger(__name__)
@@ -115,6 +115,8 @@ class MLTFServing():
         self.predict_api_loc = api_location
         self.num_channels = output_num_channels
         self.model_speed = 1
+        self.preproc_func = preproc_func
+        self.postproc_func = postproc_func
 
         # Load Model Into Memory
         self.load_model_dict()
@@ -132,14 +134,19 @@ class MLTFServing():
         return np_array[None, 0, :, :]
 
     def predict_batch(self, super_res_tile_batch):
-        inputs = np.moveaxis(super_res_tile_batch, 1, 3).astype(np.float32)/255
+        if self.preproc_func is not None:
+            inputs = self.preproc_func(super_res_tile_batch)
+        else:
+            inputs = super_res_tile_batch
+        inputs = np.moveaxis(inputs, 1, 3).astype(np.float32)/255
         payload = {'inputs': inputs.tolist()}
         # Send prediction request
         r = requests.post(self.predict_api_loc,
                           json=payload)
         content = json.loads(r.content)
-        all_image_preds = np.asarray(content['outputs']).reshape(len(inputs),
-                                                                 256, 256)
-        all_image_preds = all_image_preds[:, np.newaxis, :, :]
-
-        return all_image_preds
+        preds = np.asarray(content['outputs']).reshape(len(inputs),
+                                                       256, 256)
+        preds = preds[:, np.newaxis, :, :]
+        if self.postproc_func is not None:
+            preds = self.postproc_func(preds)
+        return preds
